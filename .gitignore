@@ -1,0 +1,30 @@
+# SECRET FILES - NEVER UPLOAD
+config.jsonl
+localsettings.json
+proxies.json
+.env
+*.env
+
+# PYTHON
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+tt.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LOGS
+*.log

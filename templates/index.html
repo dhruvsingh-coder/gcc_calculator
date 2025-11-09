@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Header with Background Image and Main Logo -->
+<div class="header-container" style="background-image: url('{{ url_for('static', filename='images/header-bg.jpg') }}'); background-size: cover; background-position: center; padding: 20px 0;">
+    <div class="container">
+        <div class="header-content text-center">
+            <div class="logo-section">
+                <a href="https://gatewai.io" target="_blank" class="logo-link">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Company Logo" class="company-logo">
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Title Section with Infraflex Logo Above -->
+<div class="title-below-header">
+    <div class="container text-center">
+        <div class="infraflex-logo mb-3">
+            <img src="{{ url_for('static', filename='images/logo2.png') }}" alt="Infraflex Logo" class="infraflex-logo-img">
+        </div>
+        <h1 class="main-header">GCC Setup Cost Calculator</h1>
+    </div>
+</div>
+
+<!-- Tagline Section in One Line -->
+<div class="tagline-section">
+    <div class="tagline-container text-center">
+        <p class="tagline">
+            gatewAI's Infraflex* is a smart cost-calculator designed to help companies accurately estimate the total investment required to set up offices across Indian cities. It offers transparent insights for informed decision-making on infrastructure planning and expansion.
+        </p>
+    </div>
+</div>
+
+<!-- Main Calculator -->
+<div class="container main-container">
+    <form id="calculator-form" method="POST" action="{{ url_for('calculate') }}">
+        <!-- Top Row: Configuration + Plan Selection + Component Selection (Horizontal) -->
+        <div class="row g-4" style="display: flex; flex-wrap: nowrap;">
+            <!-- Configuration -->
+            <div class="col-md-4" style="flex: 1;">
+                <div class="sidebar-card config-section">
+                    <h4 class="section-header">Configuration</h4>
+                    <!-- Employee Number -->
+                    <div class="headcount-input-container">
+                        <!-- Numeric input field with placeholder -->
+                        <div class="headcount-input-field">
+                            <input type="number" class="form-control" id="headcount-input" 
+                                min="1" max="1000" value="100" 
+                                oninput="updateHeadcountFromInput(this.value)"
+                                onkeydown="return preventLargeNumbers(event)"
+                                placeholder="Employee Number">
+                        </div>
+                        
+                        <!-- Slider -->
+                        <div class="headcount-slider">
+                            <input type="range" class="form-range" id="headcount" name="headcount" 
+                                min="1" max="1000" value="100" 
+                                oninput="updateHeadcountFromSlider(this.value)">
+                        </div>
+                    </div>
+                    
+                    <!-- Tier Selection -->
+                    <div class="mb-4">
+                        <label for="tier" class="form-label">Select Tier</label>
+                        <select class="form-select" id="tier" name="tier" onchange="updateCities()">
+                            {% for tier in tiers %}
+                            <option value="{{ tier }}">{{ tier }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- City Selection -->
+                    <div class="mb-4">
+                        <label for="city" class="form-label">Select City</label>
+                        <select class="form-select" id="city" name="city">
+                            {% for city in cities_by_tier[tiers[0]] %}
+                            <option value="{{ city }}">{{ city }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan Selection - Modified for vertical layout -->
+            <div class="col-md-4" style="flex: 1;">
+                <div class="sidebar-card">
+                    <h4 class="section-header">Plan Selection</h4>
+                    <div class="plan-selection-vertical mb-4">
+                        <div class="plan-card-vertical plan-card basic mb-3" id="basic-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>Basic</h6>
+                                    <p class="small mb-0">Essential setup</p>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPlan('Basic')">Select</button>
+                            </div>
+                        </div>
+                        <div class="plan-card-vertical plan-card premium mb-3" id="premium-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>Premium</h6>
+                                    <p class="small mb-0">Enhanced features</p>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPlan('Premium')">Select</button>
+                            </div>
+                        </div>
+                        <div class="plan-card-vertical plan-card advance" id="advance-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>Advance</h6>
+                                    <p class="small mb-0">Fully customized</p>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPlan('Advance')">Select</button>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="plan" name="plan" value="Basic">
+                </div>
+            </div>
+
+            <!-- Component Selection - Matching Plan Selection Size -->
+            <div class="col-md-4" style="flex: 1;">
+                <div class="sidebar-card">
+                    <h4 class="section-header">Component Selection</h4>
+                    <div class="component-selection-vertical mb-4">
+                        <div class="component-card-vertical mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>Real Estate</h6>
+                                    <p class="small mb-0">Office space & facilities</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="real_estate" name="real_estate" checked>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-card-vertical mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>IT Infrastructure</h6>
+                                    <p class="small mb-0">Hardware, networking & security</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="it_infra" name="it_infra" checked>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-card-vertical mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>Enabling Functions</h6>
+                                    <p class="small mb-0">HR, Finance & Admin</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enabling" name="enabling" checked>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="component-card-vertical">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6>Software Licensing Fee</h6>
+                                    <p class="small mb-0">Applications & platforms</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="technology" name="technology" checked>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Calculate Cost</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Bottom Row: Quick Reference (Left) + Plan Details (Right) - SWAPPED POSITIONS -->
+    <div class="row g-4 mt-3" style="display: flex; flex-wrap: nowrap;">
+        <!-- Quick Reference - Now on the left side -->
+        <div class="col-md-4" style="flex: 1;">
+            <div class="content-card">
+                <h4 class="section-header">Quick Reference</h4>
+                <div class="metric-card mb-3">
+                    <h6 id="avg-real-estate-label">Avg Real Estate Cost (Tier 1)</h6>
+                    <h4 class="orange-text" id="avg-real-estate-value">₹0</h4>
+                </div>
+                <div class="metric-card mb-3">
+                    <h6 id="avg-it-infra-label">Avg IT Infrastructure Cost (Tier 1)</h6>
+                    <h4 class="orange-text" id="avg-it-infra-value">₹0</h4>
+                </div>
+                <h6>Plan Cost Ranges (Monthly):</h6>
+                <ul class="list-unstyled small">
+                    <li>Basic: <span id="basic-range">₹0 - ₹0</span></li>
+                    <li>Premium: <span id="premium-range">₹0 - ₹0</span></li>
+                    <li>Advance: <span id="advance-range">₹0 - ₹0</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Plan Details - Now on the right side -->
+        <div class="col-md-8" style="flex: 2;">
+            <div class="content-card">
+                <h4 class="section-header">Plan Details</h4>
+                <h5 id="plan-name">Basic Plan</h5>
+                <p id="plan-description" class="fst-italic">Essential GCC setup with core functionality</p>
+                <h6>Components Included:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Real Estate:</strong> <span id="plan-real-estate">Managed Workspace</span></li>
+                    <li><strong>IT Infrastructure:</strong> <span id="plan-it-infra">Hardware, Networking, Cloud, Security, etc.</span></li>
+                    <li><strong>Enabling Functions:</strong> <span id="plan-enabling-functions">HR/Admin, Finance, IT, etc.</span></li>
+                    <li><strong>Technology:</strong> <span id="plan-technology">Zoho, SAP, Recruiter Fusion, etc.</span></li>
+                </ul>
+                <div class="alert alert-info">
+                    Note: Premium/Advance plans may increase totals by 3–5% depending on modules and customizations.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<!-- Footer -->
+<div class="row">
+    <div class="col-12 text-center "> *The cost estimates provided by Infraflex are indicative and approximate. 
+        Actual costs may vary depending on location, vendor negotiations, and other factors.</div>
+    <div class="col-12 text-center footer">
+        <p>GCC Setup Cost Calculator v1.0</p>
+    </div>
+</div>
+
+<!-- Add some custom CSS for the vertical plan cards -->
+<style>
+    .plan-selection-vertical {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .plan-card-vertical {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    .plan-card-vertical.selected {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .plan-card-vertical:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Component Selection Styles to match Plan Selection */
+    .component-selection-vertical {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .component-card-vertical {
+        padding: 3px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .component-card-vertical:hover {
+        background-color: #f8f9fa;
+        border-color: #FFE4D6;
+    }
+
+    .component-card-vertical h6 {
+        margin-bottom: 2px;
+        color: #333;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .component-card-vertical .small {
+        color: #666;
+        font-size: 0.8rem;
+        margin-bottom: 0;
+    }
+
+    /* Form switch customization */
+    .component-card-vertical .form-check-input {
+        width: 2.8em;
+        height: 1.5em;
+    }
+
+    .component-card-vertical .form-check-input:checked {
+        background-color: #FF7F41;
+        border-color: #FF7F41;
+    }
+
+    /* Ensure consistent spacing */
+    .component-selection-vertical.mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+</style>
+
+<script>
+    // Initialize page with data from Flask
+    const citiesByTier = {{ cities_by_tier | tojson }};
+    const avgCosts = {{ avg_costs | tojson }};
+    const planRanges = {{ plan_ranges | tojson }};
+    
+    // Plan details configuration based on headcount range and plan
+    const planDetailsByHeadcount = {
+        'Basic': {
+            '0-50': {
+                name: 'Basic Plan',
+                description: 'Essential GCC setup with core functionality',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud, IT Support, Collaboration tools, Data-centre, Disaster-recovery backups, Compliance & audits, End-user peripherals, cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'HR/Admin , Finance , IT Support ',
+                technology: 'Zoho People , Zoho Recruit , Zoho Books Std , Google Workspace/Slack '
+            },
+            '51-100': {
+                name: 'Basic Plan',
+                description: 'Essential GCC setup with core functionality',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud, IT Support, Collaboration tools, Data-centre, Disaster-recovery backups, Compliance & audits, End-user peripherals, cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'HR , Finance , Admin , IT Helpdesk ',
+                technology: 'Keka (HR+Payroll), QuickBooks Advanced , Slack/Workspace '
+            },
+            '101-250': {
+                name: 'Basic Plan',
+                description: 'Essential GCC setup with core functionality',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud, IT Support, Collaboration tools, Data-centre, Disaster-recovery backups, Compliance & audits, End-user peripherals, cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'HR , Finance , Admin , IT ',
+                technology: 'Darwinbox , Zoho Books Pro , Slack/Workspace '
+            },
+            '251-500': {
+                name: 'Basic Plan',
+                description: 'Essential GCC setup with core functionality',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud, IT Support, Collaboration tools, Data-centre, Disaster-recovery backups, Compliance & audits, End-user peripherals, cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'HRBP + Ops , Finance , Admin , IT ',
+                technology: 'Darwinbox , NetSuite ERP , Slack '
+            },
+            '501-1000': {
+                name: 'Basic Plan',
+                description: 'Essential GCC setup with core functionality',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud, IT Support, Collaboration tools, Data-centre, Disaster-recovery backups, Compliance & audits, End-user peripherals, cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Full Enabling COEs with Mid Mgmt layers (HR, Finance, Admin, IT) ',
+                technology: 'SAP SuccessFactors , SAP B1/Oracle ERP , Slack '
+            }
+        },
+        'Premium': {
+            '0-50': {
+                name: 'Premium Plan',
+                description: 'Enhanced GCC setup with additional features',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt ',
+                technology: 'Zoho People , Zoho Recruit , Zoho Books Std , Zoho Campaigns , Zoho Contracts , Slack/Workspace '
+            },
+            '51-100': {
+                name: 'Premium Plan',
+                description: 'Enhanced GCC setup with additional features',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'Keka , QuickBooks Adv , HubSpot Starter , Zoho Contracts , Slack/Workspace '
+            },
+            '101-250': {
+                name: 'Premium Plan',
+                description: 'Enhanced GCC setup with additional features',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'Darwinbox , Zoho Books Pro , HubSpot Pro , DocuSign CLM , Slack '
+            },
+            '251-500': {
+                name: 'Premium Plan',
+                description: 'Enhanced GCC setup with additional features',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'Darwinbox , NetSuite ERP , HubSpot Pro , DocuSign CLM , Slack '
+            },
+            '501-1000': {
+                name: 'Premium Plan',
+                description: 'Enhanced GCC setup with additional features',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'SAP SuccessFactors , SAP B1/Oracle ERP , Salesforce Marketing Cloud , DocuSign CLM , Slack '
+            }
+        },
+        'Advance': {
+            '0-50': {
+                name: 'Advance Plan',
+                description: 'Comprehensive GCC setup with full customization',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance , Vendor Mgmt ',
+                technology: 'Keka , QuickBooks Adv , HubSpot Starter , DocuSign CLM , Slack + Notion '
+            },
+            '51-100': {
+                name: 'Advance Plan',
+                description: 'Comprehensive GCC setup with full customization',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'Darwinbox , QuickBooks Adv , HubSpot Pro , DocuSign CLM , Slack + Notion '
+            },
+            '101-250': {
+                name: 'Advance Plan',
+                description: 'Comprehensive GCC setup with full customization',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'Darwinbox , NetSuite ERP , Marketo Pro , DocuSign CLM , Slack + Notion '
+            },
+            '251-500': {
+                name: 'Advance Plan',
+                description: 'Comprehensive GCC setup with full customization',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'SAP SuccessFactors , SAP B1 ERP , Marketo Pro , Agiloft CLM , Slack Grid + Notion '
+            },
+            '501-1000': {
+                name: 'Advance Plan',
+                description: 'Comprehensive GCC setup with full customization',
+                real_estate: 'Managed Workspace',
+                it_infra: 'Hardware, Networking, Security solutions, Cloud/SaaS, IT Support & AMC, Collaboration tools, Data-centre/Colocation, Disaster-recovery backups, Compliance & audits, End-user peripherals, Advanced cybersecurity (SIEM/DLP), Biometric attendance/access',
+                enabling_functions: 'Marketing , Legal , Finance/Vendor Mgmt , Other ',
+                technology: 'SAP SuccessFactors , Oracle ERP Cloud , Salesforce Marketing Cloud , Agiloft CLM , Slack Grid + Notion '
+            }
+        }
+    };
+
+    // Function to prevent typing numbers larger than 1000
+    function preventLargeNumbers(event) {
+        // Allow backspace, delete, tab, escape, enter, and decimal point
+        if ([46, 8, 9, 27, 13, 110, 190].indexOf(event.keyCode) !== -1 ||
+            // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (event.keyCode === 65 && event.ctrlKey === true) ||
+            (event.keyCode === 67 && event.ctrlKey === true) ||
+            (event.keyCode === 86 && event.ctrlKey === true) ||
+            (event.keyCode === 88 && event.ctrlKey === true) ||
+            // Allow: home, end, left, right
+            (event.keyCode >= 35 && event.keyCode <= 39)) {
+            return;
+        }
+        
+        // Ensure that it is a number and stop the keypress if it would create a value > 1000
+        if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && 
+            (event.keyCode < 96 || event.keyCode > 105)) {
+            event.preventDefault();
+            return;
+        }
+        
+        // Get the current value and the new potential value
+        const input = event.target;
+        const currentValue = input.value;
+        const newValue = currentValue + String.fromCharCode(event.keyCode);
+        
+        // Check if the new value would be greater than 1000
+        if (parseInt(newValue) > 1000) {
+            event.preventDefault();
+            return false;
+        }
+    }
+
+    // Update plan details based on selected plan and headcount
+    function updatePlanDetails(plan, headcount) {
+        // Get headcount range
+        let headcountRange;
+        if (headcount <= 50) headcountRange = '0-50';
+        else if (headcount <= 100) headcountRange = '51-100';
+        else if (headcount <= 250) headcountRange = '101-250';
+        else if (headcount <= 500) headcountRange = '251-500';
+        else headcountRange = '501-1000';
+
+        // Get the details for current plan and headcount range
+        const details = planDetailsByHeadcount[plan][headcountRange];
+        
+        // Update the UI
+        document.getElementById('plan-name').textContent = details.name;
+        document.getElementById('plan-description').textContent = details.description;
+        document.getElementById('plan-real-estate').textContent = details.real_estate;
+        document.getElementById('plan-it-infra').textContent = details.it_infra;
+        document.getElementById('plan-enabling-functions').textContent = details.enabling_functions;
+        document.getElementById('plan-technology').textContent = details.technology;
+    }
+
+    // Update the headcount function to also update plan details
+    function updateHeadcountValue(value) {
+        document.getElementById('headcount-value').textContent = value;
+        
+        // Get current plan and update plan details
+        const plan = document.getElementById('plan').value;
+        updatePlanDetails(plan, parseInt(value));
+    }
+
+    // Update the selectPlan function to also consider headcount
+    function selectPlan(plan) {
+        // Update hidden input
+        document.getElementById('plan').value = plan;
+        
+        // Update UI
+        const planCards = document.querySelectorAll('.plan-card-vertical');
+        planCards.forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        document.getElementById(`${plan.toLowerCase()}-card`).classList.add('selected');
+        
+        // Get current headcount and update plan details
+        const headcount = parseInt(document.getElementById('headcount').value);
+        updatePlanDetails(plan, headcount);
+    }
+
+    // Enhanced function to update headcount from input with validation
+    function updateHeadcountFromInput(value) {
+        // Ensure value is within range
+        if (value < 1) value = 1;
+        if (value > 1000) {
+            value = 1000;
+            // Update the input field to show the clamped value
+            document.getElementById('headcount-input').value = value;
+        }
+        
+        document.getElementById('headcount').value = value;
+        updatePlanDetailsBasedOnHeadcount(value);
+    }
+
+    function updateHeadcountFromSlider(value) {
+        document.getElementById('headcount-input').value = value;
+        updatePlanDetailsBasedOnHeadcount(value);
+    }
+
+    function updatePlanDetailsBasedOnHeadcount(headcount) {
+        const planElement = document.getElementById('plan');
+        if (planElement && typeof updatePlanDetails === 'function') {
+            const currentPlan = planElement.value;
+            updatePlanDetails(currentPlan, parseInt(headcount));
+        }
+    }
+
+    // Set initial values
+    document.addEventListener('DOMContentLoaded', function() {
+        updateAverages('Tier 1');
+        updatePlanRanges();
+        
+        // Set initial plan details based on default headcount and plan
+        const initialHeadcount = parseInt(document.getElementById('headcount').value);
+        selectPlan('Basic'); // This will also update plan details
+        
+        // Add event listener for input changes to enforce max value
+        document.getElementById('headcount-input').addEventListener('input', function() {
+            if (this.value > 1000) {
+                this.value = 1000;
+            }
+        });
+    });
+    
+    function updateCities() {
+        const tier = document.getElementById('tier').value;
+        const citySelect = document.getElementById('city');
+        
+        // Clear existing options
+        citySelect.innerHTML = '';
+        
+        // Add new options
+        citiesByTier[tier].forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+        });
+        
+        // Update averages
+        updateAverages(tier);
+    }
+    
+    function updateAverages(tier) {
+        document.getElementById('avg-real-estate-label').textContent = `Avg Real Estate Cost (${tier})`;
+        document.getElementById('avg-it-infra-label').textContent = `Avg IT Infrastructure Cost (${tier})`;
+        
+        document.getElementById('avg-real-estate-value').textContent = 
+            `₹${avgCosts[tier].real_estate.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+        
+        document.getElementById('avg-it-infra-value').textContent = 
+            `₹${avgCosts[tier].it_infra.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+    }
+    
+    function updatePlanRanges() {
+        document.getElementById('basic-range').textContent = 
+            `₹${planRanges.Basic.min.toLocaleString('en-IN', {maximumFractionDigits: 0})} - ₹${planRanges.Basic.max.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+        
+        document.getElementById('premium-range').textContent = 
+            `₹${planRanges.Premium.min.toLocaleString('en-IN', {maximumFractionDigits: 0})} - ₹${planRanges.Premium.max.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+        
+        document.getElementById('advance-range').textContent = 
+            `₹${planRanges.Advance.min.toLocaleString('en-IN', {maximumFractionDigits: 0})} - ₹${planRanges.Advance.max.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+    }
+</script>
+{% endblock %}

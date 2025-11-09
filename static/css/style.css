@@ -1,0 +1,840 @@
+/* Header with Logos Only - Smaller Height */
+.header-container {
+    background: url("{{ url_for('static', filename='images/header-bg.jpg') }}") no-repeat center center;
+    background-size: cover;
+    padding: 1rem 0;
+    margin-bottom: 0;
+    position: relative;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    height: 100px;
+}
+
+/* Remove the overlay completely to show the image clearly */
+.header-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 1;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 2;
+    height: 100%;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.company-logo {
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.secondary-logo {
+    height: 60px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.company-logo:hover   {
+    transform: scale(1.05);
+}
+.secondary-logo:hover {
+    transform: scale(1.05);
+}
+
+/* Title below header */
+.title-below-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 1rem 0;
+    border-bottom: 1px solid #FFE4D6;
+}
+
+.title-below-header .main-header {
+    font-size: 2.5rem;
+    color: #333333;
+    margin: 0;
+    text-align: center;
+    font-weight: 750;
+}
+
+/* Tagline section below header with white background and black text */
+.tagline-section {
+    background: #ffffff; /* White background */
+    padding: 1rem 0;
+    border-bottom: 1px solid #ccc; /* light gray border */
+    margin-bottom: 2rem;
+}
+
+.tagline-container {
+    max-width: 1000px; /* Centered container */
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.tagline {
+    color: #000000; /* Black text */
+    font-size: 1rem;
+    line-height: 1.5;
+    font-style: normal; /* Remove italic */
+    margin: 0;
+    text-align: center;
+    font-weight: 500;
+    white-space: normal; /* Allow wrapping */
+    overflow: visible; /* Show full text */
+}
+
+/* Logo link styling */
+.logo-link {
+    display: inline-block;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.logo-link:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 127, 65, 0.2);
+}
+
+/* Main content spacing */
+.main-content {
+    padding: 0 0 2rem 0;
+}
+
+/* Main background */
+body {
+    background: #ffffff;
+    color: #333333;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+    color: #333333 !important;
+    font-weight: 600;
+}
+
+/* Section headers - CHANGED TO BLACK */
+.section-header {
+    color: #000000 !important; /* Changed from #FF7F41 to black */
+    border-bottom: 2px solid #FF7F41;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+/* Cards - Updated for equal height */
+.sidebar-card, .content-card {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #FFE4D6;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(255, 127, 65, 0.1);
+    transition: all 0.3s ease;
+    height: 100%; /* Ensure cards take full height of their container */
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-card:hover, .content-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 127, 65, 0.15);
+}
+
+.metric-card {
+    background: #ffffff;
+    padding: 1.2rem;
+    border-radius: 12px;
+    border: 1px solid #FFE4D6;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 4px 12px rgba(255, 127, 65, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 127, 65, 0.15);
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(90deg, #FF7F41 0%, #FFA364 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 127, 65, 0.3);
+    background: linear-gradient(90deg, #FF7F41 0%, #FFA364 100%);
+    color: white;
+}
+
+/* Toggles */
+.form-check-input:checked {
+    background-color: #FF7F41;
+    border-color: #FF7F41;
+}
+
+/* Select boxes and sliders */
+.form-select, .form-range {
+    background-color: #ffffff;
+    border: 1px solid #FFE4D6;
+    border-radius: 8px;
+    color: #333333;
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: #FF7F41;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #FF7F41;
+}
+
+.form-range::-moz-range-thumb {
+    background-color: #FF7F41;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #FF7F41;
+}
+
+/* Plan Section */
+.plan-section {
+    text-align: center;
+    margin: 50px 0;
+}
+
+.plan-options {
+    display: flex;
+    flex-direction: row;   /* align cards in a row */
+    justify-content: center; /* center horizontally */
+    gap: 25px;             /* space between cards */
+    flex-wrap: wrap;       /* allow wrapping on small screens */
+}
+
+.plan-card {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 280px;   /* same width for all cards */
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+/* Vertical Plan Cards (for sidebar use if needed) */
+.plan-selection-vertical {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.plan-card-vertical {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.plan-card-vertical:last-child {
+    margin-bottom: 0;
+}
+
+.plan-card-vertical.selected {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.plan-card-vertical:hover {
+    background-color: #f8f9fa;
+}
+
+/* Push Calculate button to bottom of card */
+.sidebar-card .btn-primary {
+    margin-top: auto;
+}
+
+/* Text */
+p, .small {
+    color: #666666 !important;
+}
+
+/* Info box */
+.alert-info {
+    background: rgba(255, 127, 65, 0.05);
+    border: 1px solid #FFE4D6;
+    border-radius: 8px;
+    color: #666666;
+}
+
+/* Divider */
+hr {
+    border-color: #FFE4D6;
+    margin: 1.5rem 0;
+}
+
+/* Enhanced Footer with Background */
+.footer {
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 3rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    border-top: 1px solid #FF7F41;
+    background: url("{{ url_for('static', filename='images/footer-bg.jpg') }}") no-repeat center center;
+    background-size: cover;
+    position: relative;
+}
+
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6); /* Dark overlay for better text contrast */
+    z-index: 1;
+}
+
+.footer > * {
+    position: relative;
+    z-index: 2;
+}
+
+.disclaimer {
+    color: #ffffff;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* Custom orange text */
+.orange-text {
+    color: #FF7F41 !important;
+    font-weight: 700;
+}
+
+/* Form labels */
+.form-label {
+    color: #666666;
+    font-weight: 500;
+}
+
+/* Additional spacing adjustments */
+.main-container {
+    padding-top: 0.0rem;
+}
+
+.config-section {
+    margin-top: 1.2rem;
+}
+
+/* Make all columns equal height (kept for compatibility) */
+.row.g-4 {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+/* Ensure .col-* are flex containers where necessary */
+.row.g-4 > [class*="col-"] {
+    display: flex;
+}
+
+/* === Strong alignment fix for top-row alignment === */
+.main-container > .row.g-4,
+.main-container .row.g-4 {
+    display: flex;
+    align-items: flex-start; /* align children to top */
+    gap: 1rem;
+}
+
+/* Make each column a column-flex so its card can stretch to full height */
+.main-container .row.g-4 > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* Ensure the immediate card inside each column fills height and aligns top */
+.main-container .row.g-4 > [class*="col-"] > .sidebar-card,
+.main-container .row.g-4 > [class*="col-"] > .content-card,
+.main-container .row.g-4 > [class*="col-"] > form > .sidebar-card {
+    margin: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Normalize header spacing inside cards so titles don't push differently */
+.sidebar-card .section-header,
+.content-card .section-header {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* Remove unexpected top margins on first child inside card containers */
+.sidebar-card > *:first-child,
+.content-card > *:first-child {
+    margin-top: 0;
+}
+
+/* Keep calculate button pinned to bottom */
+.sidebar-card .btn-primary {
+    margin-top: auto;
+}
+
+/* Fallback background colors if images don't load */
+.header-container {
+    background-color: #2c3e50; /* Dark blue fallback */
+}
+
+.footer {
+    background-color: #34495e; /* Slightly lighter blue fallback */
+}
+
+/* ===============================
+   Plan Card Colors
+   =============================== */
+.plan-card.basic {
+    background-color: #f38e32; /* Basic */
+    color: #fff;
+}
+
+.plan-card.premium {
+    background-color: #4dceae; /* Premium */
+    color: #fff;
+}
+
+.plan-card.advance {
+    background-color: #c3804e; /* Advance */
+    color: #fff;
+}
+
+/* ===============================
+   Enhanced Headcount Input Section
+   =============================== */
+
+/* Headcount input container */
+.headcount-input-container {
+    margin-bottom: 1.5rem;
+}
+
+/* Remove the large employees display box */
+.headcount-value-display {
+    display: none;
+}
+
+/* Headcount input field */
+.headcount-input-field {
+    margin-bottom: 1rem;
+}
+
+.headcount-input-field .form-control {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem;
+    border: 2px solid #FFE4D6;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333333;
+    transition: all 0.3s ease;
+    height: auto;
+}
+
+.headcount-input-field .form-control:focus {
+    border-color: #FF7F41;
+    box-shadow: 0 0 0 0.2rem rgba(255, 127, 65, 0.25);
+    background: #ffffff;
+}
+
+/* Headcount slider */
+.headcount-slider {
+    margin-top: 0.5rem;
+}
+
+.headcount-slider .form-range {
+    width: 100%;
+    height: 8px;
+    background: #FFE4D6;
+    border-radius: 4px;
+    outline: none;
+}
+
+.headcount-slider .form-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    background: #FF7F41;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(255, 127, 65, 0.4);
+    transition: all 0.2s ease;
+}
+
+.headcount-slider .form-range::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(255, 127, 65, 0.6);
+}
+
+.headcount-slider .form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #FF7F41;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(255, 127, 65, 0.4);
+    transition: all 0.2s ease;
+}
+
+.headcount-slider .form-range::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(255, 127, 65, 0.6);
+}
+
+/* Remove all range labels */
+.headcount-range-labels {
+    display: none !important;
+}
+
+/* Remove the old d-flex justify-content-between spans */
+.headcount-input-container .d-flex.justify-content-between {
+    display: none !important;
+}
+
+/* Verification Modal Styles */
+.verification-icon, .success-icon {
+    color: #FF7F41;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid #FFE4D6;
+}
+
+.modal-title {
+    color: #333333;
+    font-weight: 600;
+}
+
+/* Form controls in modal */
+.modal-content .form-control {
+    border: 1px solid #FFE4D6;
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.modal-content .form-control:focus {
+    border-color: #FF7F41;
+    box-shadow: 0 0 0 0.2rem rgba(255, 127, 65, 0.25);
+}
+
+/* Modal buttons */
+.modal-footer .btn-primary {
+    background: linear-gradient(90deg, #FF7F41 0%, #FFA364 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+}
+
+.modal-footer .btn-secondary {
+    background: #6c757d;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+}
+
+/* Success modal specific styles */
+#successModal .modal-content {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+#successModal .modal-body {
+    padding: 2rem;
+}
+
+/* Modal Backdrop Blur Effect */
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure modal content stays sharp */
+.modal-content {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Smooth transition for backdrop */
+.modal-backdrop.show {
+    opacity: 1;
+    transition: opacity 0.15s linear;
+}
+
+/* Optional: Add a slight scale effect to modal when it appears */
+.modal.fade .modal-dialog {
+    transform: scale(0.9);
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+}
+
+/* Enhanced modal styling */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    background: #ffffff;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid #FFE4D6;
+    border-radius: 12px 12px 0 0;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #FFE4D6;
+    border-radius: 0 0 12px 12px;
+    padding: 1.5rem;
+}
+
+/* Verification Modal Styles */
+.verification-icon, .success-icon {
+    color: #FF7F41;
+}
+
+.modal-title {
+    color: #333333;
+    font-weight: 600;
+}
+
+/* Form controls in modal */
+.modal-content .form-control {
+    border: 1px solid #FFE4D6;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.modal-content .form-control:focus {
+    border-color: #FF7F41;
+    box-shadow: 0 0 0 0.2rem rgba(255, 127, 65, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Modal buttons */
+.modal-footer .btn-primary {
+    background: linear-gradient(90deg, #FF7F41 0%, #FFA364 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.modal-footer .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 127, 65, 0.3);
+}
+
+.modal-footer .btn-secondary {
+    background: #6c757d;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Success modal specific styles */
+#successModal .modal-content {
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+#successModal .modal-body {
+    padding: 2rem;
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Ensure body doesn't scroll when modal is open */
+body.modal-open {
+    overflow: hidden;
+    padding-right: 0 !important;
+}
+
+/* Smooth scrolling for the entire page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Highlight animation for results section */
+@keyframes highlightPulse {
+    0% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgba(255, 127, 65, 0.1);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.highlight-results {
+    animation: highlightPulse 2s ease-in-out;
+}
+
+/* Ensure smooth transitions for all scrolls */
+* {
+    scroll-margin-top: 20px;
+}
+
+/* Optional: Add a subtle fade-in effect for results */
+.content-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Delay the animation for better effect */
+.content-card:nth-child(1) { animation-delay: 0.1s; }
+.content-card:nth-child(2) { animation-delay: 0.2s; }
+
+
+/* Smooth scrolling for the entire page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Highlight animation for results section */
+@keyframes highlightPulse {
+    0% {
+        background-color: transparent;
+        box-shadow: 0 4px 12px rgba(255, 127, 65, 0.1);
+    }
+    50% {
+        background-color: rgba(255, 127, 65, 0.05);
+        box-shadow: 0 8px 25px rgba(255, 127, 65, 0.2);
+        transform: translateY(-5px);
+    }
+    100% {
+        background-color: transparent;
+        box-shadow: 0 4px 12px rgba(255, 127, 65, 0.1);
+        transform: translateY(0);
+    }
+}
+
+.highlight-results {
+    animation: highlightPulse 2s ease-in-out;
+}
+
+/* Ensure smooth transitions for all scrolls */
+* {
+    scroll-margin-top: 20px;
+}
+
+/* Fade-in animation for results */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sticky header adjustment */
+.sticky-header-offset {
+    scroll-margin-top: 120px; /* Adjust based on your header height */
+}
+
+/* Smooth transition for the results card */
+.results-card {
+    transition: all 0.5s ease-in-out;
+}
+
+/* Loading state for calculate button */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

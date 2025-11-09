@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "SMTP_SERVER": "smtp.office365.com",
+    "SMTP_PORT": "587",
+    "SMTP_USERNAME": "your-email@yourcompany.com",
+    "SMTP_PASSWORD": "your-app-password",
+    "AzureWebJobsFeatureFlags": "EnableWorkerIndexing"
+  }
+}
