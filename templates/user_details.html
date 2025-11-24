@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👤 User Details: {{ user_id }}</h2>
+        <a href="{{ url_for('admin_stats') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    {% if user_data.user_info %}
+    <!-- User Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h4>{{ user_data.user_info['visit_count'] }}</h4>
+                    <p>Total Visits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h4>{{ user_data.user_info['total_calculations'] }}</h4>
+                    <p>Calculations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h6>First Visit</h6>
+                    <p>{{ user_data.user_info['first_visit'][:16] }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h6>Last Visit</h6>
+                    <p>{{ user_data.user_info['last_visit'][:16] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Visit History -->
+    <div class="card">
+        <div class="card-header">
+            <h5>📋 Visit History</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Headcount</th>
+                            <th>City</th>
+                            <th>Tier</th>
+                            <th>Plan</th>
+                            <th>Components</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visit in user_data.user_visits %}
+                        <tr>
+                            <td>{{ visit['visit_time'][:16] }}</td>
+                            <td>{{ visit['headcount'] }}</td>
+                            <td>{{ visit['city'] }}</td>
+                            <td>{{ visit['tier'] }}</td>
+                            <td>{{ visit['plan'] }}</td>
+                            <td>
+                                {% if visit['real_estate'] %}<span class="badge bg-primary">Real Estate</span>{% endif %}
+                                {% if visit['it_infra'] %}<span class="badge bg-success">IT Infra</span>{% endif %}
+                                {% if visit['enabling'] %}<span class="badge bg-info">Enabling</span>{% endif %}
+                                {% if visit['technology'] %}<span class="badge bg-warning">Technology</span>{% endif %}
+                            </td>
+                            <td>₹{{ "{:,.0f}".format(visit['total_cost']) if visit['total_cost'] else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

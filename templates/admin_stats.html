@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Website Analytics Dashboard</h2>
+        <a href="{{ url_for('export_visits') }}" class="btn btn-success">
+            <i class="fas fa-download me-2"></i>Export Data
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h4>{{ stats.total_visits }}</h4>
+                    <p>Total Visits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h4>{{ stats.unique_users }}</h4>
+                    <p>Unique Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h4>{{ stats.visits_with_id }}</h4>
+                    <p>Visits with ID</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h4>{{ stats.total_users }}</h4>
+                    <p>Total Users</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- User Ranking -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>👥 User Ranking (by visits)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Visits</th>
+                                    <th>Calculations</th>
+                                    <th>Last Visit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in stats.user_ranking %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('user_details', user_id=user['user_id']) }}">
+                                            {{ user['user_id'] }}
+                                        </a>
+                                    </td>
+                                    <td>{{ user['visit_count'] }}</td>
+                                    <td>{{ user['total_calculations'] }}</td>
+                                    <td>{{ user['last_visit'][:16] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Configurations -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🏙️ Popular Cities</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for city in stats.popular_cities %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ city['city'] }}
+                            <span class="badge bg-primary rounded-pill">{{ city['count'] }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>📋 Popular Plans</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for plan in stats.popular_plans %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ plan['plan'] }}
+                            <span class="badge bg-success rounded-pill">{{ plan['count'] }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Visits -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>🕒 Recent Visits</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Headcount</th>
+                            <th>City</th>
+                            <th>Plan</th>
+                            <th>Total Cost</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visit in stats.recent_visits %}
+                        <tr>
+                            <td>{{ visit['user_id'] }}</td>
+                            <td>{{ visit['headcount'] }}</td>
+                            <td>{{ visit['city'] }}</td>
+                            <td>{{ visit['plan'] }}</td>
+                            <td>₹{{ "{:,.0f}".format(visit['total_cost']) if visit['total_cost'] else 'N/A' }}</td>
+                            <td>{{ visit['visit_time'][:16] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

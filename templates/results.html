@@ -46,7 +46,7 @@
                         <!-- Numeric input field with placeholder -->
                         <div class="headcount-input-field">
                             <input type="number" class="form-control" id="headcount-input" 
-                                min="1" max="1000" value="100" 
+                                min="1" max="1000" value="{{ results.headcount if results else 100 }}" 
                                 oninput="updateHeadcountFromInput(this.value)"
                                 onkeydown="return preventLargeNumbers(event)"
                                 placeholder="Employee Number">
@@ -55,7 +55,7 @@
                         <!-- Slider -->
                         <div class="headcount-slider">
                             <input type="range" class="form-range" id="headcount" name="headcount" 
-                                min="1" max="1000" value="100" 
+                                min="1" max="1000" value="{{ results.headcount if results else 100 }}" 
                                 oninput="updateHeadcountFromSlider(this.value)">
                         </div>
                     </div>
@@ -173,7 +173,8 @@
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Calculate Cost</button>
+                    <!-- Updated Calculate Button -->
+                    <button type="button" class="btn btn-primary w-100" onclick="checkVerificationBeforeSubmit()">Calculate Cost</button>
                 </div>
             </div>
         </div>
@@ -188,16 +189,27 @@
                 
                 {% if results %}
                 <div class="row mb-4">
+                    <!-- Updated: Side-by-side layout for INR and USD -->
                     <div class="col-md-6">
                         <div class="metric-card">
                             <h6 class="tooltip-heading">
-                                Total Monthly Cost (INR)
+                                Total Monthly Cost
                                 <span class="tooltip-indicator" data-bs-toggle="tooltip" 
                                       title="This is the ballpark figure; the actual number will vary based on the selection of asset class, IT infrastructure, number of employees in enabling functions, and final selection of software licensing.">
                                     *
                                 </span>
                             </h6>
-                            <h2 class="orange-text">₹{{ "{:,.0f}".format(results.total_cost) }}</h2>
+                            <div class="cost-display-side-by-side">
+                                <div class="cost-column">
+                                    <h2 class="orange-text">₹{{ "{:,.0f}".format(results.total_cost) }}</h2>
+                                    <p class="small text-muted mb-0">INR</p>
+                                </div>
+                                <div class="cost-column">
+                                    <h2 class="orange-text">${{ "{:,.2f}".format(results.total_cost / 85) }}</h2>
+                                    <p class="small text-muted mb-0">USD</p>
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-1 text-center">Monthly</p>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -210,6 +222,7 @@
                                 </span>
                             </h6>
                             <h2 class="orange-text">${{ "%.2f"|format(results.hourly_cost_per_head_usd) }}</h2>
+                            <p class="small text-muted mb-0">Per hour per employee</p>
                         </div>
                     </div>
                 </div>
@@ -471,6 +484,45 @@
 
     .tooltip.bs-tooltip-end .tooltip-arrow::before {
         border-right-color: #333;
+    }
+
+    /* NEW: Side-by-side cost display styles */
+    .cost-display-side-by-side {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 10px 0;
+    }
+
+    .cost-column {
+        flex: 1;
+        text-align: center;
+        padding: 0 10px;
+    }
+
+    .cost-column:first-child {
+        border-right: 1px solid #e9ecef;
+    }
+
+    .cost-column h2 {
+        margin-bottom: 5px;
+        font-size: 1.8rem;
+    }
+
+    .cost-column .small {
+        font-size: 0.75rem;
+    }
+
+    /* Ensure metric cards maintain same height */
+    .metric-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .metric-card h6 {
+        margin-bottom: 15px;
     }
 </style>
 
@@ -871,6 +923,7 @@
 
         const costSummaryData = [
             ["Total Monthly Cost (INR)", "Rs. " + totalCost.toLocaleString("en-IN")],
+            ["Total Monthly Cost (USD)", "$" + (totalCost / 85).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})],
             ["Cost (USD/hour/head)", "$" + usdCost.toFixed(2)],
         ];
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, Response, redirect
 import pandas as pd
 import numpy as np
 from openpyxl import load_workbook
@@ -10,6 +10,9 @@ import secrets
 from datetime import datetime, timedelta
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
+import sqlite3
+from flask import g
+import traceback
 
 # Initialize Flask app FIRST
 app = Flask(__name__)
@@ -56,6 +59,271 @@ SENDGRID_CONFIG = {
     'from_email': os.environ.get('SENDGRID_FROM_EMAIL', 'dhruv@talenttrail.ai'),
     'from_name': os.environ.get('SENDGRID_FROM_NAME', 'GCC Setup Cost Calculator')
 }
+
+# ============================================================================
+# VISITS TRACKER FUNCTIONS
+# ============================================================================
+
+def get_db():
+    """Get SQLite database connection"""
+    if 'db' not in g:
+        g.db = sqlite3.connect('visits.db')
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+def close_db(e=None):
+    """Close database connection"""
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    """Initialize the database with required tables"""
+    db = get_db()
+    
+    try:
+        # Check if tables exist
+        tables = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND (name='user_visits' OR name='user_stats')").fetchall()
+        
+        if len(tables) < 2:
+            print("🔄 Creating missing database tables...")
+            # Create user_visits table
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS user_visits (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    headcount INTEGER,
+                    city TEXT,
+                    tier TEXT,
+                    plan TEXT,
+                    real_estate BOOLEAN,
+                    it_infra BOOLEAN,
+                    enabling BOOLEAN,
+                    technology BOOLEAN,
+                    total_cost REAL,
+                    visit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Create user_stats table for summary data
+            db.execute('''
+                CREATE TABLE IF NOT EXISTS user_stats (
+                    user_id TEXT PRIMARY KEY,
+                    visit_count INTEGER DEFAULT 1,
+                    first_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    total_calculations INTEGER DEFAULT 1
+                )
+            ''')
+            
+            db.commit()
+            print("✅ Database tables created successfully")
+        else:
+            print("✅ Database tables already exist")
+            
+    except Exception as e:
+        print(f"❌ Error initializing database: {e}")
+        db.rollback()
+
+def log_visit(user_data):
+    """Log a user visit and update statistics"""
+    if not user_data.get('user_id'):
+        print("❌ log_visit: No user_id provided")
+        return None
+    
+    db = get_db()
+    
+    try:
+        print(f"📊 Logging visit for user: {user_data['user_id']}")
+        print(f"📊 Visit data: {user_data}")
+        
+        # Insert the visit details
+        cursor = db.execute('''
+            INSERT INTO user_visits 
+            (user_id, headcount, city, tier, plan, real_estate, it_infra, enabling, technology, total_cost)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            user_data['user_id'],
+            user_data.get('headcount'),
+            user_data.get('city'),
+            user_data.get('tier'),
+            user_data.get('plan'),
+            user_data.get('real_estate', False),
+            user_data.get('it_infra', False),
+            user_data.get('enabling', False),
+            user_data.get('technology', False),
+            user_data.get('total_cost')
+        ))
+        
+        visit_id = cursor.lastrowid
+        print(f"✅ Visit record created with ID: {visit_id}")
+        
+        # Update or insert user statistics
+        result = db.execute('''
+            INSERT INTO user_stats (user_id, visit_count, total_calculations, last_visit)
+            VALUES (?, 1, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id) 
+            DO UPDATE SET 
+                visit_count = visit_count + 1,
+                total_calculations = total_calculations + 1,
+                last_visit = CURRENT_TIMESTAMP
+        ''', (user_data['user_id'],))
+        
+        db.commit()
+        print(f"✅ User stats updated for: {user_data['user_id']}")
+        return visit_id
+        
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Error logging visit for {user_data['user_id']}: {e}")
+        print(f"❌ Full traceback: {traceback.format_exc()}")
+        return None
+
+def get_visit_stats():
+    """Get comprehensive visit statistics"""
+    db = get_db()
+    
+    try:
+        # Basic counts
+        stats = db.execute('''
+            SELECT 
+                COUNT(DISTINCT user_id) as unique_users,
+                COUNT(*) as total_visits,
+                COUNT(DISTINCT user_id) as total_users,
+                SUM(CASE WHEN user_id IS NOT NULL AND user_id != '' THEN 1 ELSE 0 END) as visits_with_id
+            FROM user_visits
+        ''').fetchone()
+        
+        # Recent visits (last 50)
+        recent_visits = db.execute('''
+            SELECT user_id, headcount, city, plan, total_cost, visit_time
+            FROM user_visits 
+            WHERE user_id IS NOT NULL AND user_id != ''
+            ORDER BY visit_time DESC 
+            LIMIT 50
+        ''').fetchall()
+        
+        # User ranking by visit count
+        user_ranking = db.execute('''
+            SELECT user_id, visit_count, first_visit, last_visit, total_calculations
+            FROM user_stats 
+            ORDER BY visit_count DESC, last_visit DESC
+        ''').fetchall()
+        
+        # Popular configurations
+        popular_cities = db.execute('''
+            SELECT city, COUNT(*) as count
+            FROM user_visits 
+            WHERE city IS NOT NULL
+            GROUP BY city 
+            ORDER BY count DESC 
+            LIMIT 10
+        ''').fetchall()
+        
+        popular_plans = db.execute('''
+            SELECT plan, COUNT(*) as count
+            FROM user_visits 
+            WHERE plan IS NOT NULL
+            GROUP BY plan 
+            ORDER BY count DESC
+        ''').fetchall()
+        
+        return {
+            'unique_users': stats['unique_users'],
+            'total_visits': stats['total_visits'],
+            'total_users': stats['total_users'],
+            'visits_with_id': stats['visits_with_id'],
+            'recent_visits': recent_visits,
+            'user_ranking': user_ranking,
+            'popular_cities': popular_cities,
+            'popular_plans': popular_plans
+        }
+    except Exception as e:
+        print(f"❌ Error getting visit stats: {e}")
+        return {
+            'unique_users': 0,
+            'total_visits': 0,
+            'total_users': 0,
+            'visits_with_id': 0,
+            'recent_visits': [],
+            'user_ranking': [],
+            'popular_cities': [],
+            'popular_plans': []
+        }
+
+def get_user_details(user_id):
+    """Get detailed history for a specific user"""
+    db = get_db()
+    
+    try:
+        user_info = db.execute('''
+            SELECT * FROM user_stats WHERE user_id = ?
+        ''', (user_id,)).fetchone()
+        
+        user_visits = db.execute('''
+            SELECT * FROM user_visits 
+            WHERE user_id = ? 
+            ORDER BY visit_time DESC
+        ''', (user_id,)).fetchall()
+        
+        return {
+            'user_info': user_info,
+            'user_visits': user_visits
+        }
+    except Exception as e:
+        print(f"❌ Error getting user details for {user_id}: {e}")
+        return {
+            'user_info': None,
+            'user_visits': []
+        }
+
+def export_data(format='json'):
+    """Export all visit data"""
+    import json
+    
+    db = get_db()
+    
+    try:
+        visits = db.execute('''
+            SELECT * FROM user_visits ORDER BY visit_time DESC
+        ''').fetchall()
+        
+        stats = db.execute('''
+            SELECT * FROM user_stats ORDER BY visit_count DESC
+        ''').fetchall()
+        
+        data = {
+            'visits': [dict(row) for row in visits],
+            'stats': [dict(row) for row in stats],
+            'export_time': datetime.now().isoformat()
+        }
+        
+        if format == 'json':
+            return json.dumps(data, indent=2, default=str)
+        else:
+            return data
+    except Exception as e:
+        print(f"❌ Error exporting data: {e}")
+        return json.dumps({'error': str(e)}, indent=2)
+
+# ============================================================================
+# DATABASE INITIALIZATION - UPDATED FOR FLASK 3.0+
+# ============================================================================
+
+def initialize_database():
+    """Initialize database on app startup"""
+    with app.app_context():
+        init_db()
+        print("✅ Database initialized successfully")
+
+@app.teardown_appcontext
+def close_database(error):
+    """Close database connection on teardown"""
+    close_db()
+
+# ============================================================================
+# EMAIL AND OTP FUNCTIONS
+# ============================================================================
 
 def send_email_sendgrid(to_email, subject, body):
     """Send email using SendGrid API with detailed debugging"""
@@ -106,7 +374,6 @@ def send_email_sendgrid(to_email, subject, body):
             
     except Exception as e:
         print(f"❌ SendGrid error: {str(e)}")
-        import traceback
         print(f"❌ Full error traceback: {traceback.format_exc()}")
         return False
 
@@ -188,6 +455,10 @@ def add_verified_email(email, organization):
     }
     session['verified_emails'] = verified_emails
     session.modified = True
+
+# ============================================================================
+# DATA LOADING AND CALCULATION FUNCTIONS
+# ============================================================================
 
 def load_data():
     """Load data from Excel file and prepare for use"""
@@ -507,6 +778,10 @@ def get_plan_costs(headcount, plan):
         print(f"Error getting plan costs: {str(e)}")
         return 0, 0
 
+# ============================================================================
+# FLASK ROUTES
+# ============================================================================
+
 # Test SendGrid Route
 @app.route('/test-sendgrid')
 def test_sendgrid():
@@ -726,7 +1001,7 @@ def check_verification():
         print(f"Verification check error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-# Updated calculate route to use session-based verification
+# Updated calculate route to use verified email as user_id
 @app.route('/calculate', methods=['POST'])
 def calculate():
     """Calculate costs based on user input"""
@@ -739,17 +1014,23 @@ def calculate():
             verified_email = pending_email
             verified_emails = session.get('verified_emails', {})
             organization = verified_emails[verified_email]['organization']
+            user_id = verified_email  # Use verified email as user ID for tracking
         else:
             # For direct form submission without OTP, we don't require verification
             # This maintains backward compatibility
             verified_email = None
             organization = None
+            user_id = None  # No user ID if not verified
 
         # Get form data
         headcount = int(request.form.get('headcount', 100))
         tier = request.form.get('tier', 'Tier 1')
         city = request.form.get('city', 'Bengaluru')
         plan = request.form.get('plan', 'Basic')
+        
+        # DEBUG: Print user_id to console
+        print(f"🔍 DEBUG - User ID from verified email: '{user_id}'")
+        print(f"🔍 DEBUG - Form data: headcount={headcount}, city={city}, plan={plan}")
         
         # Component toggles
         real_estate_toggle = request.form.get('real_estate') == 'on'
@@ -824,6 +1105,29 @@ def calculate():
             'organization': organization
         }
         
+        # Log the visit if user_id is provided (from verified email)
+        if user_id:
+            print(f"📝 Attempting to log visit for user: {user_id}")
+            visit_data = {
+                'user_id': user_id,
+                'headcount': headcount,
+                'city': city,
+                'tier': tier,
+                'plan': plan,
+                'real_estate': real_estate_toggle,
+                'it_infra': it_infra_toggle,
+                'enabling': enabling_toggle,
+                'technology': technology_toggle,
+                'total_cost': total_cost
+            }
+            visit_id = log_visit(visit_data)
+            if visit_id:
+                print(f"✅ Successfully logged visit ID: {visit_id} for user: {user_id}")
+            else:
+                print(f"❌ Failed to log visit for user: {user_id}")
+        else:
+            print("⚠️ No verified email (user_id), skipping visit logging")
+        
         return render_template('results.html', 
                              results=results, 
                              cities_by_tier=convert_to_serializable(cities_by_tier))
@@ -832,7 +1136,70 @@ def calculate():
         print(f"Error in calculate route: {str(e)}")
         return f"Error calculating costs: {str(e)}", 500
 
-# Existing Routes
+# ============================================================================
+# ADMIN ROUTES FOR VISITS TRACKER
+# ============================================================================
+
+@app.route('/admin/stats')
+def admin_stats():
+    """Admin page to view statistics"""
+    stats = get_visit_stats()
+    return render_template('admin_stats.html', stats=stats)
+
+@app.route('/admin/user/<user_id>')
+def user_details(user_id):
+    """Detailed view for a specific user"""
+    user_data = get_user_details(user_id)
+    return render_template('user_details.html', user_data=user_data, user_id=user_id)
+
+@app.route('/admin/export')
+def export_visits():
+    """Export all data as JSON"""
+    data = export_data('json')
+    return Response(
+        data,
+        mimetype="application/json",
+        headers={"Content-disposition": "attachment; filename=visits_export.json"}
+    )
+
+@app.route('/admin')
+def admin_home():
+    return redirect('/admin/stats')
+
+# ============================================================================
+# DEBUG ROUTES
+# ============================================================================
+
+@app.route('/admin/debug-db')
+def debug_database():
+    """Debug route to check database contents"""
+    db = get_db()
+    
+    try:
+        # Check user_visits table
+        visits = db.execute('SELECT * FROM user_visits ORDER BY visit_time DESC').fetchall()
+        visits_data = [dict(row) for row in visits]
+        
+        # Check user_stats table
+        stats = db.execute('SELECT * FROM user_stats ORDER BY last_visit DESC').fetchall()
+        stats_data = [dict(row) for row in stats]
+        
+        return jsonify({
+            'user_visits_count': len(visits_data),
+            'user_stats_count': len(stats_data),
+            'user_visits': visits_data,
+            'user_stats': stats_data
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        })
+
+# ============================================================================
+# EXISTING ROUTES
+# ============================================================================
+
 @app.route('/')
 def index():
     """Main page"""
@@ -861,13 +1228,19 @@ def get_plan_details():
 if __name__ == '__main__':
     # Load data on startup
     if load_data():
+        # Initialize database
+        initialize_database()
+        
         print("🚀 Starting GCC Cost Calculator...")
         print("✅ OTP Verification: Active (24-hour memory)")
         print("✅ SendGrid Integration: Active")
         print("✅ SMTP Fallback: Active")
+        print("✅ Visits Tracker: Active")
         print("📍 Server: http://localhost:5000")
         print("📍 Test SendGrid: http://localhost:5000/test-sendgrid")
         print("📍 Debug Info: http://localhost:5000/debug-sendgrid")
+        print("📍 Admin Dashboard: http://localhost:5000/admin/stats")
+        print("📍 Database Debug: http://localhost:5000/admin/debug-db")
         # Disable Flask's built-in dotenv loading
         app.run(debug=True, host='0.0.0.0', port=5000, load_dotenv=False)
     else:

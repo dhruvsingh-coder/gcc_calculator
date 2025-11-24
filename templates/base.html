@@ -261,6 +261,48 @@
             document.getElementById('otpError').style.display = 'none';
         }
 
+        // Check if user is verified before submitting
+        function checkVerificationBeforeSubmit() {
+            // Check if we have a verified email in session storage
+            const hasVerifiedEmail = sessionStorage.getItem('userVerified');
+            
+            if (hasVerifiedEmail === 'true') {
+                // User is already verified, submit form directly
+                submitFormDirectly();
+            } else {
+                // User needs verification
+                showVerificationModal();
+            }
+        }
+
+        // Function to submit form directly (when user is already verified)
+        function submitFormDirectly() {
+            const calculateBtn = document.querySelector('button[onclick="checkVerificationBeforeSubmit()"]');
+            if (calculateBtn) {
+                const originalText = calculateBtn.innerHTML;
+                
+                // Show loading state
+                calculateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
+                calculateBtn.disabled = true;
+                
+                // Set flag for auto-scroll
+                sessionStorage.setItem('scrollToResults', 'true');
+                
+                // Submit the form
+                document.getElementById('calculator-form').submit();
+                
+                // Restore button after a timeout (in case submission fails)
+                setTimeout(() => {
+                    calculateBtn.innerHTML = originalText;
+                    calculateBtn.disabled = false;
+                }, 3000);
+            } else {
+                // Fallback: submit form directly
+                sessionStorage.setItem('scrollToResults', 'true');
+                document.getElementById('calculator-form').submit();
+            }
+        }
+
         async function sendOTP() {
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
@@ -304,23 +346,15 @@
                     // Email is already verified - proceed directly to calculation
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Proceeding...';
                     
+                    // Mark user as verified in session storage
+                    sessionStorage.setItem('userVerified', 'true');
+                    
                     // Hide verification modal
                     const verificationModal = bootstrap.Modal.getInstance(document.getElementById('verificationModal'));
                     verificationModal.hide();
                     
-                    // Set flag for auto-scroll
-                    sessionStorage.setItem('scrollToResults', 'true');
-                    
-                    // Show loading state on calculate button
-                    const calculateBtn = document.querySelector('button[type="submit"]');
-                    if (calculateBtn) {
-                        calculateBtn.classList.add('btn-loading');
-                        calculateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
-                        calculateBtn.disabled = true;
-                    }
-                    
                     // Submit the form directly
-                    document.getElementById('calculator-form').submit();
+                    submitFormDirectly();
                     return;
                 }
 
@@ -348,18 +382,11 @@
                         const verificationModal = bootstrap.Modal.getInstance(document.getElementById('verificationModal'));
                         verificationModal.hide();
                         
-                        // Set flag for auto-scroll
-                        sessionStorage.setItem('scrollToResults', 'true');
+                        // Mark user as verified in session storage
+                        sessionStorage.setItem('userVerified', 'true');
                         
-                        // Show loading state on calculate button
-                        const calculateBtn = document.querySelector('button[type="submit"]');
-                        if (calculateBtn) {
-                            calculateBtn.classList.add('btn-loading');
-                            calculateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
-                            calculateBtn.disabled = true;
-                        }
-                        
-                        document.getElementById('calculator-form').submit();
+                        // Submit the form directly
+                        submitFormDirectly();
                     } else {
                         // Hide verification modal
                         const verificationModal = bootstrap.Modal.getInstance(document.getElementById('verificationModal'));
@@ -423,19 +450,14 @@
                     const otpModal = bootstrap.Modal.getInstance(document.getElementById('otpModal'));
                     otpModal.hide();
                     
+                    // Mark user as verified in session storage
+                    sessionStorage.setItem('userVerified', 'true');
+                    
                     // Set flag for auto-scroll after page reload
                     sessionStorage.setItem('scrollToResults', 'true');
                     
-                    // Show loading state on calculate button
-                    const calculateBtn = document.querySelector('button[type="submit"]');
-                    if (calculateBtn) {
-                        calculateBtn.classList.add('btn-loading');
-                        calculateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
-                        calculateBtn.disabled = true;
-                    }
-                    
                     // Submit the form to calculate costs
-                    document.getElementById('calculator-form').submit();
+                    submitFormDirectly();
                 } else {
                     otpAttempts++;
                     if (otpAttempts >= maxOtpAttempts) {
@@ -578,11 +600,11 @@
 
         // Enhanced DOMContentLoaded event
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize calculate button
+            // Initialize calculate button - changed to use the new function
             const calculateBtn = document.querySelector('button[type="submit"]');
             if (calculateBtn) {
                 calculateBtn.setAttribute('type', 'button');
-                calculateBtn.setAttribute('onclick', 'showVerificationModal()');
+                calculateBtn.setAttribute('onclick', 'checkVerificationBeforeSubmit()');
             }
 
             // Initialize headcount inputs
