@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 import os
 import smtplib
 from email.mime.text import MIMEText
+
 import random
 import secrets
 from datetime import datetime, timedelta
@@ -956,7 +957,8 @@ def verify_otp():
             # Clean up OTP storage and session
             del otp_storage[otp_id]
             session.pop('otp_id', None)
-            session.pop('pending_email', None)
+            # IMPORTANT: keep / reset pending_email so /calculate can use it
+            session['pending_email'] = email
             
             return jsonify({
                 'verified': True,
@@ -1134,6 +1136,7 @@ def calculate():
         
     except Exception as e:
         print(f"Error in calculate route: {str(e)}")
+        print(traceback.format_exc())
         return f"Error calculating costs: {str(e)}", 500
 
 # ============================================================================
@@ -1211,13 +1214,13 @@ def index():
                          plan_ranges=convert_to_serializable(plan_ranges))
 
 @app.route('/api/cities/<tier>')
-def get_cities_by_tier(tier):
+def get_cities_by_tier_route(tier):
     """API endpoint to get cities by tier"""
     cities = cities_by_tier.get(tier, [])
     return jsonify(convert_to_serializable(cities))
 
 @app.route('/api/plan_details')
-def get_plan_details():
+def get_plan_details_route():
     """API endpoint to get plan details for specific plan and headcount"""
     plan = request.args.get('plan', 'Basic')
     headcount = int(request.args.get('headcount', 100))
