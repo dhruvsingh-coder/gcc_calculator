@@ -173,8 +173,8 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Updated Calculate Button -->
-                    <button type="button" class="btn btn-primary w-100" onclick="checkVerificationBeforeSubmit()">Calculate Cost</button>
+                    <!-- Updated Calculate Button - Remove checkVerificationBeforeSubmit -->
+                    <button type="submit" class="btn btn-primary w-100" id="calculate-btn">Calculate Cost</button>
                 </div>
             </div>
         </div>
@@ -674,17 +674,17 @@
         const details = planDetailsByHeadcount[plan][headcountRange];
         
         // Update the UI
-        document.getElementById('plan-name').textContent = details.name;
-        document.getElementById('plan-description').textContent = details.description;
-        document.getElementById('plan-real-estate').textContent = details.real_estate;
-        document.getElementById('plan-it-infra').textContent = details.it_infra;
-        document.getElementById('plan-enabling-functions').textContent = details.enabling_functions;
-        document.getElementById('plan-technology').textContent = details.technology;
+        if (document.getElementById('plan-name')) {
+            document.getElementById('plan-name').textContent = details.name;
+            document.getElementById('plan-description').textContent = details.description;
+            document.getElementById('plan-real-estate').textContent = details.real_estate;
+            document.getElementById('plan-it-infra').textContent = details.it_infra;
+            document.getElementById('plan-enabling-functions').textContent = details.enabling_functions;
+            document.getElementById('plan-technology').textContent = details.technology;
+        }
     }
 
     function updateHeadcountValue(value) {
-        document.getElementById('headcount-value').textContent = value;
-        
         // Get current plan and update plan details
         const plan = document.getElementById('plan').value;
         updatePlanDetails(plan, parseInt(value));
@@ -796,6 +796,9 @@
 
     // Initialize plan details on page load
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize form submission for auto-scroll
+        setupFormSubmission();
+        
         const initialHeadcount = parseInt(document.getElementById('headcount').value);
         const initialPlan = document.getElementById('plan').value;
         updatePlanDetails(initialPlan, initialHeadcount);
@@ -813,21 +816,70 @@
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
 
-        // Check if we should auto-scroll to results (after OTP verification)
-        const shouldScroll = sessionStorage.getItem('scrollToResults');
-        if (shouldScroll === 'true') {
-            // Clear the flag
-            sessionStorage.removeItem('scrollToResults');
+        // Auto-scroll to results if we have results
+        {% if results %}
+        setTimeout(function() {
+            autoScrollToResults();
+        }, 300);
+        {% endif %}
+
+        // Add event listener for input changes to enforce max value
+        const headcountInput = document.getElementById('headcount-input');
+        if (headcountInput) {
+            headcountInput.addEventListener('input', function() {
+                if (this.value > 1000) {
+                    this.value = 1000;
+                }
+            });
+        }
+    });
+
+    // Setup form submission to trigger auto-scroll
+    function setupFormSubmission() {
+        const calculateBtn = document.getElementById('calculate-btn');
+        const form = document.getElementById('calculator-form');
+        
+        if (calculateBtn && form) {
+            calculateBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Set flag for auto-scroll after submission
+                sessionStorage.setItem('shouldScrollToResults', 'true');
+                
+                // Show loading state
+                const originalText = calculateBtn.innerHTML;
+                calculateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
+                calculateBtn.disabled = true;
+                
+                // Submit the form
+                form.submit();
+                
+                // Restore button after timeout (in case submission fails)
+                setTimeout(() => {
+                    calculateBtn.innerHTML = originalText;
+                    calculateBtn.disabled = false;
+                }, 3000);
+            });
+        }
+    }
+
+    // Function to auto-scroll to results
+    function autoScrollToResults() {
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) {
+            // Check if we should scroll (set by form submission)
+            const shouldScroll = sessionStorage.getItem('shouldScrollToResults');
             
-            // Scroll to results after a short delay to ensure page is fully loaded
-            setTimeout(() => {
-                const resultsSection = document.getElementById('results-section');
-                if (resultsSection) {
-                    // Add highlight animation
-                    resultsSection.classList.add('highlight-results');
-                    resultsSection.classList.add('fade-in-up');
-                    
-                    // Smooth scroll to results
+            if (shouldScroll === 'true') {
+                // Clear the flag
+                sessionStorage.removeItem('shouldScrollToResults');
+                
+                // Add highlight animation
+                resultsSection.classList.add('highlight-results');
+                resultsSection.classList.add('fade-in-up');
+                
+                // Wait a moment for page to fully render, then scroll
+                setTimeout(() => {
                     resultsSection.scrollIntoView({ 
                         behavior: 'smooth', 
                         block: 'start',
@@ -838,17 +890,10 @@
                     setTimeout(() => {
                         resultsSection.classList.remove('highlight-results');
                     }, 2000);
-                }
-            }, 800);
-        }
-
-        // Add event listener for input changes to enforce max value
-        document.getElementById('headcount-input').addEventListener('input', function() {
-            if (this.value > 1000) {
-                this.value = 1000;
+                }, 100);
             }
-        });
-    });
+        }
+    }
     
     function downloadReport() {
         {% if results %}

@@ -171,8 +171,8 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Updated Calculate Button -->
-                    <button type="button" class="btn btn-primary w-100" onclick="checkVerificationBeforeSubmit()">Calculate Cost</button>
+                    <!-- CHANGED: Direct submit without authentication check -->
+                    <button type="submit" class="btn btn-primary w-100">Calculate Cost</button>
                 </div>
             </div>
         </div>
@@ -611,5 +611,7 @@
         document.getElementById('advance-range').textContent = 
             `₹${planRanges.Advance.min.toLocaleString('en-IN', {maximumFractionDigits: 0})} - ₹${planRanges.Advance.max.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
     }
+
+    // REMOVED: checkVerificationBeforeSubmit() function since authentication is disabled
 </script>
 {% endblock %}
